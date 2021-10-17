@@ -27,3 +27,4 @@ dependencies:
       - pillow
       - kaggle
       - ipywidgets
+      - varname
