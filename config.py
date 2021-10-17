@@ -6,17 +6,16 @@ import torch
 import torch.backends.cudnn as cudnn
 import torch.nn as nn
 from loss import VGGContentLoss
-from varname import nameof
 
-# constants to be exported by config dict
+# Flexible args
 BATCH_SIZE              = 32
-NUM_EPOCHS_TRAIN        = 150
-NUM_EPOCHS_PRETRAIN     = 25
+NUM_EPOCHS_TRAIN        = 150 #150
+NUM_EPOCHS_PRETRAIN     = 50 #25
 HIGH_RES_SIZE           = 96
 SCALING_FACTOR          = 2
 LOW_RES_SIZE            = HIGH_RES_SIZE // 4
 
-# Perceptual loss function weight.
+# Perceptual loss function weights
 PIXEL_WEIGHT            = 1e-3
 CONTENT_WEIGHT          = 0.006
 ADVERSARIAL_WEIGHT      = 1e-3
@@ -29,10 +28,10 @@ DISC_LR                 = 1e-4
 # Architecture specific config
 USE_INCEPTION_BLOCKS    = False
 
-# It is preferable to not touch these
+# Fixed args (don't touch these if it isn't necessary)
 DEVICE                  = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 ADVERSARIAL_CRITERION   = nn.BCELoss().to(DEVICE)
-CONTENT_CRITERION       = VGGContentLoss()
+CONTENT_CRITERION       = VGGContentLoss().to(DEVICE)
 PIXEL_CRITERION         = nn.MSELoss().to(DEVICE)
 
 def export_config_dict():

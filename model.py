@@ -22,11 +22,14 @@ import torchvision.transforms.functional as F
 
 class Generator(nn.Module):
     def __init__(self, num_channels=64, scale_factor=2, use_inception_blocks = False):
+        
         super(Generator, self).__init__()
+
         self.init_layers = nn.Sequential(
             nn.Conv2d(3, num_channels, 9, padding=4),
             nn.PReLU(num_parameters = num_channels),
         )
+
         if use_inception_blocks:
             self.convolutional_blocks = nn.Sequential(
                 InceptionBlock(num_channels, red_3x3=32, red_5x5=16, out_1x1 = 64, out_3x3 = 64, out_5x5 = 32, out_1x1pool = 32),
@@ -45,7 +48,6 @@ class Generator(nn.Module):
                 InceptionBlock(256, red_3x3=32, red_5x5=16, out_1x1 = 64, out_3x3 = 64, out_5x5 = 32, out_1x1pool = 32),
                 InceptionBlock(192, red_3x3 = 32, red_5x5 = 16, out_1x1 = 16, out_3x3 =32, out_5x5 = 8, out_1x1pool = 8),
             )
-
         else:
             self.convolutional_blocks = nn.Sequential(
                 *[ResidualBlock(num_channels,num_channels) for _ in range(16)]
@@ -60,15 +62,15 @@ class Generator(nn.Module):
             UpsampleBlock(num_channels,scale_factor),
             UpsampleBlock(num_channels,scale_factor),
         )
-        self.output_layer = nn.Conv2d(num_channels, 3, 9, padding=4);
+        self.output_layer = nn.Conv2d(num_channels, 3, 9, padding=4)
     
     def forward(self, x):
         # Save the output from initial conv layers so that we can add it to our skip connection before upsampling
         out_init_layers = self.init_layers(x)
-        out_convolutional_blocks= self.residual_blocks(out_init_layers)
+        out_convolutional_blocks= self.convolutional_blocks(out_init_layers)
         out_final_residual_block = self.final_residual_block(out_convolutional_blocks) + out_init_layers
         out_upsample_blocks = self.upsample_blocks(out_final_residual_block)
-        return self.output_layer(out_upsample_blocks);
+        return self.output_layer(out_upsample_blocks)
 
 
 class InceptionBlock(nn.Module):

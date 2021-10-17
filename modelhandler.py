@@ -1,5 +1,6 @@
 # Imports
 from os.path import exists
+from os import mkdir
 from pathlib import Path
 
 import math
@@ -43,7 +44,9 @@ class ModelHandler:
             config_dict = config.export_config_dict()
         
         if stem:
-            PATH = self.saved_model_path + '/' + str(stem) + '.pt'
+
+            FOLDER = self.saved_model_path + '/' + str(stem)    
+            PATH = FOLDER + '/models.pt'
             
             if exists(PATH):
                 overwrite = input('There already exist a checkpoint with this name. Do you want to overwrite? (Write YES)')
@@ -51,6 +54,13 @@ class ModelHandler:
                     print('Interrupting saving models (no overwrite)')
                     return
             
+            try:
+                # Create a new folder if it does not exist
+                if not exists(FOLDER):
+                    mkdir(FOLDER)
+            except OSError as error:
+                print(error)
+
             torch.save({
                 'generator_state_dict':generator.state_dict(),
                 'discriminator_state_dict':discriminator.state_dict(),
@@ -61,18 +71,21 @@ class ModelHandler:
             }, PATH)
             if exists(PATH):
                 print('Saved succesfully')
+            return FOLDER   # Return path of the folder where the models were saved
         else:
             print('Interrupting saving models (no path specified)')
-            return
+        return None
             
-    def load_models(self):
+    def load_models(self, stem = None):
         print('Load procedure initialized..')
-        stem = input('Enter stem of path (leave empty for new models): ')
+        if not stem:
+            stem = input('Enter stem of path (leave empty for new models): ')
         if stem:
-            PATH = self.saved_model_path + '/' + str(stem) + '.pt'
+            FOLDER = self.saved_model_path + '/' + str(stem)
+            PATH = FOLDER + '/models.pt'
             
             if exists(PATH):
-                print('Loading existing models')
+                print('Loading existing models from ' + PATH)
                 checkpoint = torch.load(PATH)
                 # Load generator
                 generator = Generator(use_inception_blocks = checkpoint['USE_INCEPTION_BLOCKS'])
@@ -92,13 +105,11 @@ class ModelHandler:
                 gen_opti_pretrain = optim.Adam(generator.parameters(), lr=checkpoint['GEN_LR_PRETRAIN'], betas=(0.9, 0.999))
                 gen_opti_pretrain.load_state_dict(checkpoint['gen_opti_pretrain_state_dict'])     
                 
-                # Initialize loss functions that are used for perceptual and adversarial loss
-                adversarial_criterion = nn.BCELoss().to(config.DEVICE)
-                content_criterion = VGGContentLoss()
-                pixel_criterion = nn.MSELoss().to(config.DEVICE)
-
                 # Training parameters
-                config_dict = checkpoint
+                config_dict = config.export_config_dict()
+                for key in config_dict.keys():
+                    # transfer checkpoint config value to config_dict
+                    config_dict[key] = checkpoint[key]
     
                 print_loaded_args(config_dict)
                 return generator, discriminator, disc_opti, gen_opti, gen_opti_pretrain, config_dict
@@ -108,31 +119,28 @@ class ModelHandler:
         print('Loading models from scratch')
         config_dict = config.export_config_dict()
 
-        generator = Generator().to(config.DEVICE)
+        generator = Generator(use_inception_blocks = config_dict['USE_INCEPTION_BLOCKS']).to(config.DEVICE)
         discriminator = Discriminator(config_dict['HIGH_RES_SIZE']).to(config.DEVICE)
 
         disc_opti = optim.Adam(discriminator.parameters(), lr=config_dict['DISC_LR'], betas=(0.9, 0.999))
         gen_opti = optim.Adam(generator.parameters(), lr=config_dict['GEN_LR'], betas=(0.9, 0.999))
         gen_opti_pretrain = optim.Adam(generator.parameters(), lr=config_dict['GEN_LR_PRETRAIN'], betas=(0.9, 0.999))
         
-        # Initialize loss functions that are used for perceptual and adversarial loss
-        adversarial_criterion = nn.BCELoss().to(config.DEVICE)
-        content_criterion = VGGContentLoss()
-        pixel_criterion = nn.MSELoss().to(config.DEVICE)
         print_loaded_args(config_dict)
         return generator, discriminator, disc_opti, gen_opti, gen_opti_pretrain, config_dict
 
 def print_loaded_args(config_dict):
-    print('high_res_size: ' + str(config_dict['HIGH_RES_SIZE']))
-    print('low_res_size: ' + str(config_dict['LOW_RES_SIZE'] ))
-    print('scaling_factor: ' + str(config_dict['SCALING_FACTOR']))
-    print('batch_size: ' + str(config_dict['BATCH_SIZE']))
-    print('num_epochs_train: ' + str(config_dict['NUM_EPOCHS_TRAIN']))
-    print('num_epochs_pretrain: ' + str(config_dict['NUM_EPOCHS_PRETRAIN']))
-    print('gen_lr: ' + str(config_dict['GEN_LR']))
-    print('gen_lr_pretrain: ' + str(config_dict['GEN_LR_PRETRAIN']))
-    print('disc_lr: ' + str(config_dict['DISC_LR']))
-    print('use_inception_blocks: ' + str(config_dict['USE_INCEPTION_BLOCKS']))
-    print('pixel_weight: ' + str(config_dict['PIXEL_WEIGHT']))
-    print('content_weight: ' + str(config_dict['CONTENT_WEIGHT']))
-    print('adversarial_weight: ' + str(config_dict['ADVERSARIAL_WEIGHT']))
+    print('high_res_size:           ' + str(config_dict['HIGH_RES_SIZE']))
+    print('low_res_size:            ' + str(config_dict['LOW_RES_SIZE'] ))
+    print('scaling_factor:          ' + str(config_dict['SCALING_FACTOR']))
+    print('batch_size:              ' + str(config_dict['BATCH_SIZE']))
+    print('num_epochs_train:        ' + str(config_dict['NUM_EPOCHS_TRAIN']))
+    print('num_epochs_pretrain:     ' + str(config_dict['NUM_EPOCHS_PRETRAIN']))
+    print('gen_lr:                  ' + str(config_dict['GEN_LR']))
+    print('gen_lr_pretrain:         ' + str(config_dict['GEN_LR_PRETRAIN']))
+    print('disc_lr:                 ' + str(config_dict['DISC_LR']))
+    print('use_inception_blocks:    ' + str(config_dict['USE_INCEPTION_BLOCKS']))
+    print('pixel_weight:            ' + str(config_dict['PIXEL_WEIGHT']))
+    print('content_weight:          ' + str(config_dict['CONTENT_WEIGHT']))
+    print('adversarial_weight:      ' + str(config_dict['ADVERSARIAL_WEIGHT']))
+

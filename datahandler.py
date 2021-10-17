@@ -27,7 +27,6 @@ from PIL import Image
 class DataHandler(Dataset):
     
     def __init__(self, datapath, high_res_size, low_res_size):
-        print("HEHEH")
         datapath = Path(datapath)
         if not (datapath.exists() and datapath.is_dir()):
             raise ValueError(f"Data root '{root}' is invalid")

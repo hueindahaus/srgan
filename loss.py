@@ -1,17 +1,15 @@
 import torch
 import torch.nn as nn # Includes all modules, nn.Linear, nn.Conv2d, BatchNorm etc
 from torchvision.models import vgg19
-import config
 
 # class for content loss function to penalize if features don't match between generated and target image
 class VGGContentLoss(nn.Module):
-    
     def __init__(self):
         super().__init__()
         # Extract the features of vgg19 network
-        self.feature_layers = vgg19(pretrained=True).features[:18].eval().to(config.DEVICE)
+        self.feature_layers = vgg19(pretrained=True).features[:18].eval()
         # Use mean squared error loss for feature diffs
-        self.mse = nn.MSELoss().to(config.DEVICE)
+        self.mse = nn.MSELoss()
         
         for param in self.feature_layers.parameters():
             param.requires_grad = False
@@ -25,3 +23,8 @@ class VGGContentLoss(nn.Module):
         target_img_features = self.feature_layers(target_img)
 
         return self.mse(gen_img_features, target_img_features)
+
+    def to(self, device):
+        self.feature_layers.to(device)
+        self.mse.to(device)
+        return self
