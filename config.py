@@ -17,8 +17,8 @@ LOW_RES_SIZE            = HIGH_RES_SIZE // 4
 
 # Perceptual loss function weights
 PIXEL_WEIGHT            = 1e-3
-CONTENT_WEIGHT          = 0.006
-ADVERSARIAL_WEIGHT      = 1e-3
+CONTENT_WEIGHT          = 0.008
+ADVERSARIAL_WEIGHT      = 5 * 1e-3
 
 # Learning rates
 GEN_LR_PRETRAIN         = 1e-3
