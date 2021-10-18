@@ -52,9 +52,9 @@ def save_result_images(generator, datahandler, folder_path, reverse_normalizatio
 
     with torch.no_grad():
 
-        img_lr_1 = datahandler.get_sample_by_name('baboon', 128)
+        img_lr_1 = datahandler.get_sample_by_name('pikachu', 128)
         img_sr_1 = generator.forward(torch.unsqueeze(img_lr_1.cuda().detach(), 0))[-1].cpu()
-        img_hr_1 = datahandler.get_sample_by_name('baboon', 512)
+        img_hr_1 = datahandler.get_sample_by_name('pikachu', 512)
 
         img_lr_2 = datahandler.get_sample_by_name('eagle', 128)
         img_sr_2 = generator.forward(torch.unsqueeze(img_lr_2.cuda().detach(), 0))[-1].cpu()
@@ -64,14 +64,30 @@ def save_result_images(generator, datahandler, folder_path, reverse_normalizatio
         img_sr_3 = generator.forward(torch.unsqueeze(img_lr_3.cuda().detach(), 0))[-1].cpu()
         img_hr_3 = datahandler.get_sample_by_name('bee', 512)
 
+        
+        img_lr_4 = datahandler.get_sample_by_name('spiderverse', 128)
+        img_sr_4 = generator.forward(torch.unsqueeze(img_lr_4.cuda().detach(), 0))[-1].cpu()
+        img_hr_4 = datahandler.get_sample_by_name('spiderverse', 512)
+        
+        img_lr_5 = datahandler.get_sample_by_name('dog', 128)
+        img_sr_5 = generator.forward(torch.unsqueeze(img_lr_5.cuda().detach(), 0))[-1].cpu()
+        img_hr_5 = datahandler.get_sample_by_name('dog', 512)
+
+        img_lr_6 = datahandler.get_sample_by_name('building', 128)
+        img_sr_6 = generator.forward(torch.unsqueeze(img_lr_6.cuda().detach(), 0))[-1].cpu()
+        img_hr_6 = datahandler.get_sample_by_name('building', 512)
+
         if reverse_normalization:
             img_sr_1 = 0.5 * img_sr_1 + 0.5
             img_sr_2 = 0.5 * img_sr_2 + 0.5
             img_sr_3 = 0.5 * img_sr_3 + 0.5
+            img_sr_4 = 0.5 * img_sr_4 + 0.5
+            img_sr_5 = 0.5 * img_sr_5 + 0.5
+            img_sr_6 = 0.5 * img_sr_6 + 0.5
         try:
-            save_image(img_lr_1, folder_path + '/baboon-lr.jpg')
-            save_image(img_sr_1, folder_path + '/baboon-sr.jpg')
-            save_image(img_hr_1, folder_path + '/baboon-hr.jpg')
+            save_image(img_lr_1, folder_path + '/pikachu-lr.jpg')
+            save_image(img_sr_1, folder_path + '/pikachu-sr.jpg')
+            save_image(img_hr_1, folder_path + '/pikachu-hr.jpg')
             
             save_image(img_lr_2, folder_path + '/eagle-lr.jpg')
             save_image(img_sr_2, folder_path + '/eagle-sr.jpg')
@@ -80,7 +96,19 @@ def save_result_images(generator, datahandler, folder_path, reverse_normalizatio
             save_image(img_lr_3, folder_path + '/bee-lr.jpg')
             save_image(img_sr_3, folder_path + '/bee-sr.jpg')
             save_image(img_hr_3, folder_path + '/bee-hr.jpg')
-            print("Succesfully saved result images in ")
+
+            save_image(img_lr_4, folder_path + '/spiderverse-lr.jpg')
+            save_image(img_sr_4, folder_path + '/spiderverse-sr.jpg')
+            save_image(img_hr_4, folder_path + '/spiderverse-hr.jpg')
+            
+            save_image(img_lr_5, folder_path + '/dog-lr.jpg')
+            save_image(img_sr_5, folder_path + '/dog-sr.jpg')
+            save_image(img_hr_5, folder_path + '/dog-hr.jpg')
+
+            save_image(img_lr_6, folder_path + '/building-lr.jpg')
+            save_image(img_sr_6, folder_path + '/building-sr.jpg')
+            save_image(img_hr_6, folder_path + '/building-hr.jpg')
+            print("Succesfully saved result images in " + folder_path)
         except:
             print("ERROR when saving result images")
         
