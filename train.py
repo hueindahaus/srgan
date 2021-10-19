@@ -69,7 +69,8 @@ def train_loop(dataloader,  generator,discriminator, disc_opti, gen_opti, gen_op
     ax_gen_loss = plt.subplot2grid((3, 6), (2, 3), colspan=3)
     
     memory_allocated_for_tensors = 0
-    
+    # detect anomaly (e.g. when loss becomes NaN)
+    torch.autograd.set_detect_anomaly(True)
     for epoch in range(1, num_epochs + 1):
         for batch_index, (high_res_batch, low_res_batch) in enumerate(dataloader, 1):
             
@@ -87,15 +88,18 @@ def train_loop(dataloader,  generator,discriminator, disc_opti, gen_opti, gen_op
                 # Initialize the gradient of the discriminator model.
                 discriminator.zero_grad()
 
-                # [1.1] Train discriminator with real images
+                # Perform forward prop on discriminator
                 real_preds = discriminator(high_res_batch)
+                fake_preds = discriminator(fake_batch.detach())
+
+
+                # [1.1] Train discriminator with real images
                 real_labels = torch.ones_like(real_preds, device=config.DEVICE)
-                disc_real_loss = adversarial_criterion(real_preds, real_labels)
+                disc_real_loss = adversarial_criterion(real_preds - torch.mean(fake_preds), real_labels)
 
                 # [1.2] Train discriminator with fake generated images
-                fake_preds = discriminator(fake_batch.detach())
                 fake_labels = torch.zeros_like(fake_preds, device=config.DEVICE)
-                disc_fake_loss = adversarial_criterion(fake_preds, fake_labels)
+                disc_fake_loss = adversarial_criterion(fake_preds - torch.mean(real_preds), fake_labels)
 
                 # Discriminator loss
                 disc_loss = disc_real_loss + disc_fake_loss
@@ -119,11 +123,12 @@ def train_loop(dataloader,  generator,discriminator, disc_opti, gen_opti, gen_op
             
             if adversarial:
                 # Generator wants the discriminator to output 1 on its generated images
+                new_real_preds = discriminator(high_res_batch.detach())
                 new_fake_preds = discriminator(fake_batch)
                 gen_desirable_labels = torch.ones_like(new_fake_preds, device=config.DEVICE)
 
                 # Generator loss is based on a weighted sum of adversarial loss and content loss
-                adversarial_loss = adversarial_criterion(new_fake_preds, gen_desirable_labels)
+                adversarial_loss = adversarial_criterion(new_fake_preds - torch.mean(new_real_preds), gen_desirable_labels)
                 content_loss = content_criterion(fake_batch, high_res_batch.detach())
                 pixel_loss = pixel_criterion(fake_batch, high_res_batch.detach())
 
@@ -151,7 +156,7 @@ def train_loop(dataloader,  generator,discriminator, disc_opti, gen_opti, gen_op
             #gen_losses.append(gen_loss.detach().item())
                 
             # plot and print progression every x:th batch
-            if batch_index % 50 == 0:
+            if batch_index % 100 == 0:
                 if adversarial:
                     print('[%d/%d][%d/%d]\tLoss_D: %.4f\tLoss_G: %.4f\tD(x): %.4f\tD(G(z)): %.4f / %.4f'
                           % (epoch, num_epochs, batch_index, len(dataloader),
@@ -164,10 +169,10 @@ def train_loop(dataloader,  generator,discriminator, disc_opti, gen_opti, gen_op
                 with torch.no_grad():
                      # Display images to visualize current state in training
                     display_image(ax_lr_dynamic, low_res_batch[-1].cpu().detach())
-                    display_image(ax_sr_dynamic, fake_batch[-1].cpu().detach(), reverse_normalization = True)
-                    display_image(ax_hr_dynamic, high_res_batch[-1].cpu().detach(), reverse_normalization = True)
+                    display_image(ax_sr_dynamic, fake_batch[-1].cpu().detach())
+                    display_image(ax_hr_dynamic, high_res_batch[-1].cpu().detach())
                     display_image(ax_lr_fixed, dataloader.dataset.get_sample_by_name('baboon', 128))
-                    display_image(ax_sr_fixed, generator.forward(torch.unsqueeze(dataloader.dataset.get_sample_by_name('baboon', 128).cuda().detach(), 0))[-1].cpu(), reverse_normalization = True)
+                    display_image(ax_sr_fixed, generator.forward(torch.unsqueeze(dataloader.dataset.get_sample_by_name('baboon', 128).cuda().detach(), 0))[-1].cpu())
                     display_image(ax_hr_fixed, dataloader.dataset.get_sample_by_name('baboon', 512))
                     ax_disc_loss.plot(disc_losses)
                     ax_disc_loss.set_title('Discriminator loss')

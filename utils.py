@@ -34,8 +34,8 @@ def display_image(axis, image_tensor, reverse_normalization = False):
     image_data = image_tensor.permute(1, 2, 0).numpy()
     
     # Assuming our normalization on the image is mean=0.5 and std=0.5 for all channels we can do this to more accurately display the image
-    if reverse_normalization:
-        image_data = 0.5 * image_data + 0.5
+    #if reverse_normalization:
+    #    image_data = 0.5 * image_data + 0.5
     
     height, width, _ = image_data.shape
     axis.imshow(image_data)
@@ -77,13 +77,14 @@ def save_result_images(generator, datahandler, folder_path, reverse_normalizatio
         img_sr_6 = generator.forward(torch.unsqueeze(img_lr_6.cuda().detach(), 0))[-1].cpu()
         img_hr_6 = datahandler.get_sample_by_name('building', 512)
 
-        if reverse_normalization:
-            img_sr_1 = 0.5 * img_sr_1 + 0.5
-            img_sr_2 = 0.5 * img_sr_2 + 0.5
-            img_sr_3 = 0.5 * img_sr_3 + 0.5
-            img_sr_4 = 0.5 * img_sr_4 + 0.5
-            img_sr_5 = 0.5 * img_sr_5 + 0.5
-            img_sr_6 = 0.5 * img_sr_6 + 0.5
+        # note: this re-norm assumes that we normalized with mean=0.5 and std=0.5
+        #if reverse_normalization:
+        #    img_sr_1 = 0.5 * img_sr_1 + 0.5
+        #    img_sr_2 = 0.5 * img_sr_2 + 0.5
+        #    img_sr_3 = 0.5 * img_sr_3 + 0.5
+        #    img_sr_4 = 0.5 * img_sr_4 + 0.5
+        #    img_sr_5 = 0.5 * img_sr_5 + 0.5
+        #    img_sr_6 = 0.5 * img_sr_6 + 0.5
         try:
             save_image(img_lr_1, folder_path + '/pikachu-lr.jpg')
             save_image(img_sr_1, folder_path + '/pikachu-sr.jpg')

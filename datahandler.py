@@ -36,7 +36,7 @@ class DataHandler(Dataset):
         # Set transforms
         self.transform_both = T.Compose([T.RandomHorizontalFlip(p=0.5), T.RandomRotation((-180, 180)), T.RandomCrop((high_res_size, high_res_size), pad_if_needed=True)])
         self.transform_low = T.Compose([T.Resize((low_res_size, low_res_size), Image.BICUBIC), T.ToTensor(), T.Normalize([0,0,0] ,[1,1,1])])
-        self.transform_high = T.Compose([T.ToTensor(), T.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])]) # NOTE: Normalization to range [-1,1] is only done for hr images according to paper
+        self.transform_high = T.Compose([T.ToTensor(), T.Normalize([0, 0, 0], [1, 1, 1])]) # NOTE: Normalization to range [-1,1] is only done for hr images according to paper
         
         # Collect samples
         self.samples = self.collect_samples()
@@ -54,6 +54,10 @@ class DataHandler(Dataset):
         # Perform transforms, if any.
         high_res_img = self.transform_high(high_res_img)
         low_res_img = self.transform_low(low_res_img)
+
+        if torch.any(torch.isnan(high_res_img)) or torch.any(torch.isnan(low_res_img)):
+            raise Exception("Image tensor contains nan values")
+
         return high_res_img, low_res_img
     
     def __len__(self):

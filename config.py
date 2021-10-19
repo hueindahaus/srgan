@@ -9,16 +9,16 @@ from loss import VGGContentLoss
 
 # Flexible args
 BATCH_SIZE              = 32
-NUM_EPOCHS_TRAIN        = 150 #150
+NUM_EPOCHS_TRAIN        = 300 #150
 NUM_EPOCHS_PRETRAIN     = 50 #25
 HIGH_RES_SIZE           = 96
 SCALING_FACTOR          = 2
 LOW_RES_SIZE            = HIGH_RES_SIZE // 4
 
 # Perceptual loss function weights
-PIXEL_WEIGHT            = 1e-3
-CONTENT_WEIGHT          = 0.008
-ADVERSARIAL_WEIGHT      = 5 * 1e-3
+ADVERSARIAL_WEIGHT      = 5e-3
+CONTENT_WEIGHT          = 1
+PIXEL_WEIGHT            = 1e-1 # 1e-2 in esrgan paper
 
 # Learning rates
 GEN_LR_PRETRAIN         = 1e-3
@@ -30,9 +30,9 @@ USE_INCEPTION_BLOCKS    = False
 
 # Fixed args (don't touch these if it isn't necessary)
 DEVICE                  = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-ADVERSARIAL_CRITERION   = nn.BCELoss().to(DEVICE)
+ADVERSARIAL_CRITERION   = nn.BCEWithLogitsLoss().to(DEVICE)
 CONTENT_CRITERION       = VGGContentLoss().to(DEVICE)
-PIXEL_CRITERION         = nn.MSELoss().to(DEVICE)
+PIXEL_CRITERION         = nn.L1Loss().to(DEVICE)
 
 def export_config_dict():
     dict = {

@@ -26,8 +26,8 @@ class Generator(nn.Module):
         super(Generator, self).__init__()
 
         self.init_layers = nn.Sequential(
-            nn.Conv2d(3, num_channels, 9, padding=4),
-            nn.PReLU(num_parameters = num_channels),
+            nn.Conv2d(3, num_channels, 3 , padding=1),  #kernel size 9 padding 4 i think
+            nn.LeakyReLU(0.2, True),
         )
 
         if use_inception_blocks:
@@ -50,19 +50,24 @@ class Generator(nn.Module):
             )
         else:
             self.convolutional_blocks = nn.Sequential(
-                *[ResidualBlock(num_channels,num_channels) for _ in range(16)]
+                *[ResidualBlock(num_channels,num_channels) for _ in range(18)]
             )
         
         
         self.final_residual_block = nn.Sequential(
             nn.Conv2d(num_channels, num_channels, 3, padding=1, bias=False),
-            nn.BatchNorm2d(num_channels),
+            #nn.BatchNorm2d(num_channels),
         )
         self.upsample_blocks = nn.Sequential(
             UpsampleBlock(num_channels,scale_factor),
             UpsampleBlock(num_channels,scale_factor),
         )
-        self.output_layer = nn.Conv2d(num_channels, 3, 9, padding=4)
+        self.output_layers = nn.Sequential(
+            #nn.Conv2d(num_channels, 3, 9, padding=4), 
+            nn.Conv2d(num_channels, num_channels, 3, padding=1),
+            nn.LeakyReLU(0.2, inplace=True),
+            nn.Conv2d(num_channels, 3, 3, padding=1),
+        )
     
     def forward(self, x):
         # Save the output from initial conv layers so that we can add it to our skip connection before upsampling
@@ -70,8 +75,35 @@ class Generator(nn.Module):
         out_convolutional_blocks= self.convolutional_blocks(out_init_layers)
         out_final_residual_block = self.final_residual_block(out_convolutional_blocks) + out_init_layers
         out_upsample_blocks = self.upsample_blocks(out_final_residual_block)
-        return self.output_layer(out_upsample_blocks)
+        return self.output_layers(out_upsample_blocks)
 
+class ResidualBlock(nn.Module):
+    def __init__(self, in_channels=64, num_channels=64):
+        super(ResidualBlock, self).__init__()
+        self.block = nn.Sequential(
+            nn.Conv2d(in_channels, num_channels, 3, padding=1, bias=False),
+            nn.LeakyReLU(0.2, True),
+            nn.Conv2d(num_channels, num_channels, 3, padding=1, bias=False),
+        )
+        
+    def forward(self, x):
+        return self.block(x) + x
+
+class UpsampleBlock(nn.Module):
+    def __init__(self, in_channels, scale_factor=2):
+        super(UpsampleBlock, self).__init__()
+        self.block = nn.Sequential(
+            # The number of output filters is altered to be in_channels * sf^2 so that pixel shuffle (next layer) can upscale image
+            nn.Upsample(scale_factor=scale_factor, mode="nearest"), # remove these three blocks if upsampling doesn't work
+            nn.Conv2d(in_channels, in_channels, 3, padding=1),
+            nn.LeakyReLU(0.2, inplace=True)
+
+            #nn.Conv2d(in_channels, in_channels * scale_factor ** 2, 3, padding=1, bias=False),
+            #nn.PixelShuffle(scale_factor), #  in_channels * scale_factor^2, height, width -> in_channels, height*2, width*2
+            #nn.ReLU(),
+        )
+    def forward(self, x):
+        return self.block(x)
 
 class InceptionBlock(nn.Module):
     def __init__(self, in_channels, red_3x3, red_5x5, out_1x1, out_3x3, out_5x5, out_1x1pool):
@@ -110,35 +142,7 @@ class InceptionBlock(nn.Module):
     
     def forward(self, x):
         return torch.cat([self.branch1(x), self.branch2(x), self.branch3(x), self.branch4(x)], 1)        
-    
-class ResidualBlock(nn.Module):
-    def __init__(self, in_channels=64, num_channels=64):
-        super(ResidualBlock, self).__init__()
-        self.block = nn.Sequential(
-            nn.Conv2d(in_channels, num_channels, 3, padding=1, bias=False),
-            nn.BatchNorm2d(num_channels),
-            nn.PReLU(num_parameters = num_channels),
-            nn.Conv2d(num_channels, num_channels, 3, padding=1, bias=False),
-            nn.BatchNorm2d(num_channels)
-        )
         
-    def forward(self, x):
-        return self.block(x) + x
-        
-class UpsampleBlock(nn.Module):
-    def __init__(self, in_channels, scale_factor=2):
-        super(UpsampleBlock, self).__init__()
-        self.block = nn.Sequential(
-            # The number of output filters is altered to be in_channels * sf^2 so that pixel shuffle (next layer) can upscale image
-            nn.Conv2d(in_channels, in_channels * scale_factor ** 2, 3, padding=1, bias=False),
-            nn.PixelShuffle(scale_factor), #  in_channels * scale_factor^2, height, width -> in_channels, height*2, width*2
-            nn.PReLU(num_parameters=in_channels),
-        )
-    def forward(self, x):
-        return self.block(x)
-
-
-
 
 class Discriminator(nn.Module):
     
@@ -185,7 +189,6 @@ class Discriminator(nn.Module):
             nn.Linear(512*6*6, 1024),
             nn.LeakyReLU(0.2, inplace=True),
             nn.Linear(1024,1),
-            nn.Sigmoid(),
         )
     
     def forward(self, x):
