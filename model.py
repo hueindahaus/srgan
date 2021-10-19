@@ -50,7 +50,7 @@ class Generator(nn.Module):
             )
         else:
             self.convolutional_blocks = nn.Sequential(
-                *[ResidualBlock(num_channels,num_channels) for _ in range(16)]
+                *[ResidualBlock(num_channels,num_channels) for _ in range(18)]
             )
         
         
