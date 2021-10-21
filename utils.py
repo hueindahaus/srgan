@@ -92,7 +92,7 @@ def save_result_images(generator, datahandler, folder_path, reverse_normalizatio
             
             save_image(img_lr_2, folder_path + '/eagle-lr.jpg')
             save_image(img_sr_2, folder_path + '/eagle-sr.jpg')
-            save_image(img_hr_2, folder_path + '/eagle- hr.jpg')
+            save_image(img_hr_2, folder_path + '/eagle-hr.jpg')
 
             save_image(img_lr_3, folder_path + '/bee-lr.jpg')
             save_image(img_sr_3, folder_path + '/bee-sr.jpg')
@@ -112,6 +112,4 @@ def save_result_images(generator, datahandler, folder_path, reverse_normalizatio
             print("Succesfully saved result images in " + folder_path)
         except:
             print("ERROR when saving result images")
-        
-
-        
+    

@@ -32,21 +32,7 @@ class Generator(nn.Module):
 
         if use_inception_blocks:
             self.convolutional_blocks = nn.Sequential(
-                InceptionBlock(num_channels, red_3x3=32, red_5x5=16, out_1x1 = 64, out_3x3 = 64, out_5x5 = 32, out_1x1pool = 32),
-                InceptionBlock(192, red_3x3=96, red_5x5=16, out_1x1 = 64, out_3x3 = 128, out_5x5 = 32, out_1x1pool = 32),
-                InceptionBlock(256, red_3x3=128, red_5x5=32, out_1x1 = 128, out_3x3 = 192, out_5x5 = 96, out_1x1pool = 64),
-                
-                InceptionBlock(480, red_3x3 = 96, red_5x5 = 16, out_1x1 = 192, out_3x3 = 208, out_5x5 = 48, out_1x1pool = 64),
-                InceptionBlock(512, red_3x3 = 112, red_5x5 = 24, out_1x1 = 160, out_3x3 =224, out_5x5 = 64, out_1x1pool = 64),
-                InceptionBlock(512, red_3x3 = 128, red_5x5 = 24, out_1x1 = 128, out_3x3 =256, out_5x5 = 64, out_1x1pool = 64),
-                InceptionBlock(512, red_3x3 = 112, red_5x5 = 24, out_1x1 = 160, out_3x3 =224, out_5x5 = 64, out_1x1pool = 64),
-                InceptionBlock(512, red_3x3 = 128, red_5x5 = 24, out_1x1 = 128, out_3x3 =256, out_5x5 = 64, out_1x1pool = 64),
-                InceptionBlock(512, red_3x3 = 144, red_5x5 = 32, out_1x1 = 112, out_3x3 =288, out_5x5 = 64, out_1x1pool = 64),
-                InceptionBlock(528, red_3x3 = 128, red_5x5 = 24, out_1x1 = 128, out_3x3 =256, out_5x5 = 64, out_1x1pool = 64),
-                
-                InceptionBlock(512, red_3x3=96, red_5x5=16, out_1x1 = 64, out_3x3 = 128, out_5x5 = 32, out_1x1pool = 32),
-                InceptionBlock(256, red_3x3=32, red_5x5=16, out_1x1 = 64, out_3x3 = 64, out_5x5 = 32, out_1x1pool = 32),
-                InceptionBlock(192, red_3x3 = 32, red_5x5 = 16, out_1x1 = 16, out_3x3 =32, out_5x5 = 8, out_1x1pool = 8),
+                *[ResidualInceptionBlock() for _ in range(24)]
             )
         else:
             self.convolutional_blocks = nn.Sequential(
@@ -93,55 +79,36 @@ class UpsampleBlock(nn.Module):
     def __init__(self, in_channels, scale_factor=2):
         super(UpsampleBlock, self).__init__()
         self.block = nn.Sequential(
-            # The number of output filters is altered to be in_channels * sf^2 so that pixel shuffle (next layer) can upscale image
-            nn.Upsample(scale_factor=scale_factor, mode="nearest"), # remove these three blocks if upsampling doesn't work
+            nn.Upsample(scale_factor=scale_factor, mode="nearest"),
             nn.Conv2d(in_channels, in_channels, 3, padding=1),
             nn.LeakyReLU(0.2, inplace=True)
-
-            #nn.Conv2d(in_channels, in_channels * scale_factor ** 2, 3, padding=1, bias=False),
-            #nn.PixelShuffle(scale_factor), #  in_channels * scale_factor^2, height, width -> in_channels, height*2, width*2
-            #nn.ReLU(),
         )
     def forward(self, x):
         return self.block(x)
 
-class InceptionBlock(nn.Module):
-    def __init__(self, in_channels, red_3x3, red_5x5, out_1x1, out_3x3, out_5x5, out_1x1pool):
-        super(InceptionBlock, self).__init__()
-        
+# https://arxiv.org/ftp/arxiv/papers/1810/1810.13169.pdf
+class ResidualInceptionBlock(nn.Module):
+    def __init__(self):
+        super(ResidualInceptionBlock, self).__init__()
+
         self.branch1 = nn.Sequential(
-            nn.Conv2d(in_channels, out_1x1, kernel_size=1, bias=False),
-            nn.BatchNorm2d(out_1x1),
-            nn.PReLU(num_parameters=out_1x1)
+            nn.Conv2d(64, 32, kernel_size=1, bias=False),   # Reduction block
+            nn.LeakyReLU(0.2, inplace=True),
+            nn.Conv2d(32, 32, kernel_size=3, bias=False, padding=1),
+            nn.LeakyReLU(0.2, inplace=True),
         )
         
         self.branch2 = nn.Sequential(
-            nn.Conv2d(in_channels, red_3x3, kernel_size=1, bias=False),
-            nn.BatchNorm2d(red_3x3),
-            nn.PReLU(num_parameters=red_3x3),
-            nn.Conv2d(red_3x3, out_3x3, kernel_size=3, padding=1, bias=False),
-            nn.BatchNorm2d(out_3x3),
-            nn.PReLU(num_parameters=out_3x3)
-        )
-        
-        self.branch3 = nn.Sequential(
-            nn.Conv2d(in_channels, red_5x5, kernel_size=1, bias=False),
-            nn.BatchNorm2d(red_5x5),
-            nn.PReLU(num_parameters=red_5x5),
-            nn.Conv2d(red_5x5, out_5x5, kernel_size=5, padding=2, bias=False),
-            nn.BatchNorm2d(out_5x5),
-            nn.PReLU(num_parameters=out_5x5)
-        )
-        
-        self.branch4 = nn.Sequential(
-            nn.MaxPool2d(kernel_size=3, stride=1, padding=1),
-            nn.Conv2d(in_channels, out_1x1pool, kernel_size=1, bias=False),
-            nn.BatchNorm2d(out_1x1pool),
-            nn.PReLU(num_parameters=out_1x1pool),
+            nn.Conv2d(64, 32, kernel_size=1, bias=False),   # Reduction block
+            nn.LeakyReLU(0.2, inplace=True),
+            nn.Conv2d(32, 32, kernel_size=3, bias=False, padding=1),
+            nn.LeakyReLU(0.2, inplace=True),
+            nn.Conv2d(32, 32, kernel_size=3, bias=False, padding=1),
+            nn.LeakyReLU(0.2, inplace=True),
         )
     
     def forward(self, x):
-        return torch.cat([self.branch1(x), self.branch2(x), self.branch3(x), self.branch4(x)], 1)        
+        return torch.cat([self.branch1(x), self.branch2(x)], 1) + x # concatenate and add the skip connection   
         
 
 class Discriminator(nn.Module):

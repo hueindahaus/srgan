@@ -26,7 +26,7 @@ GEN_LR                  = 1e-4
 DISC_LR                 = 1e-4
 
 # Architecture specific config
-USE_INCEPTION_BLOCKS    = False
+USE_INCEPTION_BLOCKS    = True
 
 # Fixed args (don't touch these if it isn't necessary)
 DEVICE                  = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
