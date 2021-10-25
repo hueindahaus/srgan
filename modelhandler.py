@@ -112,6 +112,10 @@ class ModelHandler:
                     config_dict[key] = checkpoint[key]
     
                 print_loaded_args(config_dict)
+
+                #apply gradient clipping
+                torch.nn.utils.clip_grad_norm_(generator.parameters(), 10.)
+
                 return generator, discriminator, disc_opti, gen_opti, gen_opti_pretrain, config_dict
             else:
                 print('Path ' + PATH + '  does not exist')
@@ -127,6 +131,10 @@ class ModelHandler:
         gen_opti_pretrain = optim.Adam(generator.parameters(), lr=config_dict['GEN_LR_PRETRAIN'], betas=(0.9, 0.999))
         
         print_loaded_args(config_dict)
+
+        #apply gradient clipping
+        torch.nn.utils.clip_grad_norm_(generator.parameters(), 10.)
+
         return generator, discriminator, disc_opti, gen_opti, gen_opti_pretrain, config_dict
 
 def print_loaded_args(config_dict):

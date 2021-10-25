@@ -9,6 +9,7 @@ dependencies:
   - jupyter
   - matplotlib
   - scikit-learn
+  - scikit-image
   - scipy
   - pandas
   - seaborn
@@ -27,3 +28,4 @@ dependencies:
       - pillow
       - kaggle
       - ipywidgets
+      - opencv-python

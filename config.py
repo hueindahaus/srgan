@@ -16,9 +16,9 @@ SCALING_FACTOR          = 2
 LOW_RES_SIZE            = HIGH_RES_SIZE // 4
 
 # Perceptual loss function weights
-PIXEL_WEIGHT            = 1e-3
-CONTENT_WEIGHT          = 0.006
-ADVERSARIAL_WEIGHT      = 1e-3
+ADVERSARIAL_WEIGHT      = 5e-3
+CONTENT_WEIGHT          = 1
+PIXEL_WEIGHT            = 1e-1 # 1e-2 in esrgan paper
 
 # Learning rates
 GEN_LR_PRETRAIN         = 1e-3
@@ -26,13 +26,13 @@ GEN_LR                  = 1e-4
 DISC_LR                 = 1e-4
 
 # Architecture specific config
-USE_INCEPTION_BLOCKS    = False
+USE_INCEPTION_BLOCKS    = True
 
 # Fixed args (don't touch these if it isn't necessary)
 DEVICE                  = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-ADVERSARIAL_CRITERION   = nn.BCELoss().to(DEVICE)
+ADVERSARIAL_CRITERION   = nn.BCEWithLogitsLoss().to(DEVICE)
 CONTENT_CRITERION       = VGGContentLoss().to(DEVICE)
-PIXEL_CRITERION         = nn.MSELoss().to(DEVICE)
+PIXEL_CRITERION         = nn.L1Loss().to(DEVICE)
 
 def export_config_dict():
     dict = {
