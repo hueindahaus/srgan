@@ -44,7 +44,6 @@ class DataHandler(Dataset):
     def __getitem__(self, index):
         # Access the stored path and label for the correct index
         img_path = self.samples[index]
-        # Load the image into memory
         
         # Convert to image data with RGB (3 channels)
         high_res_img = Image.open(img_path).convert('RGB')

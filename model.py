@@ -26,7 +26,7 @@ class Generator(nn.Module):
         super(Generator, self).__init__()
 
         self.init_layers = nn.Sequential(
-            nn.Conv2d(3, num_channels, 3 , padding=1),  #kernel size 9 padding 4 i think
+            nn.Conv2d(3, num_channels, 3 , padding=1),
             nn.LeakyReLU(0.2, True),
         )
 
@@ -42,21 +42,18 @@ class Generator(nn.Module):
         
         self.final_residual_block = nn.Sequential(
             nn.Conv2d(num_channels, num_channels, 3, padding=1, bias=False),
-            #nn.BatchNorm2d(num_channels),
         )
         self.upsample_blocks = nn.Sequential(
             UpsampleBlock(num_channels,scale_factor),
             UpsampleBlock(num_channels,scale_factor),
         )
         self.output_layers = nn.Sequential(
-            #nn.Conv2d(num_channels, 3, 9, padding=4), 
             nn.Conv2d(num_channels, num_channels, 3, padding=1),
             nn.LeakyReLU(0.2, inplace=True),
             nn.Conv2d(num_channels, 3, 3, padding=1),
         )
     
     def forward(self, x):
-        # Save the output from initial conv layers so that we can add it to our skip connection before upsampling
         out_init_layers = self.init_layers(x)
         out_convolutional_blocks= self.convolutional_blocks(out_init_layers)
         out_final_residual_block = self.final_residual_block(out_convolutional_blocks) + out_init_layers

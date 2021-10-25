@@ -83,7 +83,7 @@ def train_loop(dataloader,  generator,discriminator, disc_opti, gen_opti, gen_op
             
             # If training with adversarial include discriminator and update it
             if adversarial:
-                # [1] Update Discriminator network: maximize log(D(x)) + log(1-D(G(Z)))
+                # [1] Update Discriminator network
 
                 # Initialize the gradient of the discriminator model.
                 discriminator.zero_grad()
@@ -114,7 +114,7 @@ def train_loop(dataloader,  generator,discriminator, disc_opti, gen_opti, gen_op
                 D_G_z1 = fake_preds.mean().detach().item()
 
 
-            # [2] Update Genertaor network: maximize log(D(G(z)))
+            # [2] Update Genertaor network
             
             # Initialize the gradient of the generator model.
             generator.zero_grad()
