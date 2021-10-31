@@ -16,7 +16,7 @@ This repository presents a generative adversarial network model to super resolut
 ## Model architecture
 - Model architecture are highly inspired by [SRGAN](https://arxiv.org/abs/1609.04802) with modifications brought by [ESRGAN](https://arxiv.org/abs/1809.00219).
 
-![architecture](https://user-images.githubusercontent.com/45295311/139563153-4064d5af-f965-496a-a3c3-cdf8072efa21.png)
+![gan-architecture](https://user-images.githubusercontent.com/45295311/139563996-84b435e2-8580-47c5-9b40-340f4bb592e0.png)
 
 
 ## Inception-residual block
