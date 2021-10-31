@@ -36,7 +36,7 @@ class DataHandler(Dataset):
         # Set transforms
         self.transform_both = T.Compose([T.RandomHorizontalFlip(p=0.5), T.RandomRotation((-180, 180)), T.RandomCrop((high_res_size, high_res_size), pad_if_needed=True)])
         self.transform_low = T.Compose([T.Resize((low_res_size, low_res_size), Image.BICUBIC), T.ToTensor(), T.Normalize([0,0,0] ,[1,1,1])])
-        self.transform_high = T.Compose([T.ToTensor(), T.Normalize([0, 0, 0], [1, 1, 1])]) # NOTE: Normalization to range [-1,1] is only done for hr images according to paper
+        self.transform_high = T.Compose([T.ToTensor(), T.Normalize([0, 0, 0], [1, 1, 1])])
         
         # Collect samples
         self.samples = self.collect_samples()
