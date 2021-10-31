@@ -21,7 +21,7 @@ import torchvision.transforms.functional as F
 
 
 class Generator(nn.Module):
-    def __init__(self, num_channels=64, scale_factor=2, use_inception_blocks = False):
+    def __init__(self, num_channels=64, scale_factor=2):
         
         super(Generator, self).__init__()
 
@@ -30,13 +30,8 @@ class Generator(nn.Module):
             nn.LeakyReLU(0.2, True),
         )
 
-        if use_inception_blocks:
-            self.convolutional_blocks = nn.Sequential(
+        self.convolutional_blocks = nn.Sequential(
                 *[ResidualInceptionBlock() for _ in range(24)]
-            )
-        else:
-            self.convolutional_blocks = nn.Sequential(
-                *[ResidualBlock(num_channels,num_channels) for _ in range(18)]
             )
         
         
@@ -59,18 +54,6 @@ class Generator(nn.Module):
         out_final_residual_block = self.final_residual_block(out_convolutional_blocks) + out_init_layers
         out_upsample_blocks = self.upsample_blocks(out_final_residual_block)
         return self.output_layers(out_upsample_blocks)
-
-class ResidualBlock(nn.Module):
-    def __init__(self, in_channels=64, num_channels=64):
-        super(ResidualBlock, self).__init__()
-        self.block = nn.Sequential(
-            nn.Conv2d(in_channels, num_channels, 3, padding=1, bias=False),
-            nn.LeakyReLU(0.2, True),
-            nn.Conv2d(num_channels, num_channels, 3, padding=1, bias=False),
-        )
-        
-    def forward(self, x):
-        return self.block(x) + x
 
 class UpsampleBlock(nn.Module):
     def __init__(self, in_channels, scale_factor=2):

@@ -88,7 +88,7 @@ class ModelHandler:
                 print('Loading existing models from ' + PATH)
                 checkpoint = torch.load(PATH)
                 # Load generator
-                generator = Generator(use_inception_blocks = checkpoint['USE_INCEPTION_BLOCKS'])
+                generator = Generator()
                 generator.load_state_dict(checkpoint['generator_state_dict'])
                 generator.to(config.DEVICE)
 
@@ -123,7 +123,7 @@ class ModelHandler:
         print('Loading models from scratch')
         config_dict = config.export_config_dict()
 
-        generator = Generator(use_inception_blocks = config_dict['USE_INCEPTION_BLOCKS']).to(config.DEVICE)
+        generator = Generator().to(config.DEVICE)
         discriminator = Discriminator(config_dict['HIGH_RES_SIZE']).to(config.DEVICE)
 
         disc_opti = optim.Adam(discriminator.parameters(), lr=config_dict['DISC_LR'], betas=(0.9, 0.999))
@@ -147,7 +147,6 @@ def print_loaded_args(config_dict):
     print('gen_lr:                  ' + str(config_dict['GEN_LR']))
     print('gen_lr_pretrain:         ' + str(config_dict['GEN_LR_PRETRAIN']))
     print('disc_lr:                 ' + str(config_dict['DISC_LR']))
-    print('use_inception_blocks:    ' + str(config_dict['USE_INCEPTION_BLOCKS']))
     print('pixel_weight:            ' + str(config_dict['PIXEL_WEIGHT']))
     print('content_weight:          ' + str(config_dict['CONTENT_WEIGHT']))
     print('adversarial_weight:      ' + str(config_dict['ADVERSARIAL_WEIGHT']))
