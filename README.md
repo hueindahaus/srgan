@@ -34,5 +34,3 @@ This repository presents a generative adversarial network model to super resolut
 - Result are presented in (PSNR/SSIM) where PSNR is peak signal to noise ratio and SSIM is structural similarity index measure.
 
 ![gan-results](https://user-images.githubusercontent.com/45295311/139563229-abbe62c1-d619-4a03-be34-7c61fd70c904.png)
-
-> This project is a part of the course **Deep Machine Learning (SSY340)** from Chalmers University of Technology.
